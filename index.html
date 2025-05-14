@@ -122,7 +122,7 @@
 <body>
     <div class="header">
         <img class="profile-photo" id="userPhoto" 
-             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg=='"
+             onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg=='"
              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg==">
         <div>
             <h2 id="userName">Гость</h2>
@@ -167,7 +167,6 @@
     </nav>
 
     <script>
-        // Инициализация данных
         let user = {
             name: 'Гость',
             photo: '',
@@ -175,40 +174,41 @@
             stats: { wins: 0, losses: 0 }
         };
 
-        // Проверка Telegram Web App
         const isTelegram = typeof Telegram !== 'undefined' && Telegram.WebApp;
 
-        // Загрузка данных профиля
         function loadProfile() {
             if(isTelegram) {
-                Telegram.WebApp.ready();
-                const tgUser = Telegram.WebApp.initDataUnsafe.user;
-                
-                if(tgUser) {
-                    // Обновление данных из Telegram
-                    user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
-                    user.photo = tgUser.photo_url || '';
+                try {
+                    Telegram.WebApp.ready();
+                    const tgUser = Telegram.WebApp.initDataUnsafe.user;
                     
-                    // Непосредственное обновление аватара
-                    const userPhoto = document.getElementById('userPhoto');
-                    if(tgUser.photo_url) {
-                        userPhoto.src = tgUser.photo_url + '?t=' + Date.now();
+                    if(tgUser) {
+                        user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
+                        
+                        if(tgUser.photo_url) {
+                            const userPhoto = document.getElementById('userPhoto');
+                            userPhoto.src = `${tgUser.photo_url}?t=${Date.now()}`;
+                        }
                     }
+                    Telegram.WebApp.expand();
+                } catch(e) {
+                    console.error('Ошибка инициализации Telegram:', e);
                 }
-                Telegram.WebApp.expand();
             }
-            
-            // Загрузка из localStorage
+
             const savedData = localStorage.getItem('userData');
             if(savedData) {
-                const data = JSON.parse(savedData);
-                user = { ...user, ...data };
+                try {
+                    const data = JSON.parse(savedData);
+                    user = { ...user, ...data };
+                } catch(e) {
+                    console.error('Ошибка загрузки данных:', e);
+                }
             }
 
             updateProfile();
         }
 
-        // Обновление интерфейса
         function updateProfile() {
             document.getElementById('userName').textContent = user.name;
             document.getElementById('wins').textContent = user.stats.wins;
@@ -217,14 +217,11 @@
                 .map((gift, i) => `<div class="gift-item">Подарок ${i + 1}</div>`)
                 .join('');
 
-            // Обновление статуса
-            const statusElement = document.getElementById('userStatus');
-            statusElement.textContent = isTelegram ? 
-                `@${Telegram.WebApp.initDataUnsafe.user?.username || 'пользователь'}` : 
+            document.getElementById('userStatus').textContent = isTelegram ? 
+                (Telegram.WebApp.initDataUnsafe.user?.username ? `@${Telegram.WebApp.initDataUnsafe.user.username}` : 'Пользователь Telegram') : 
                 'Гостевой режим';
         }
 
-        // Навигация
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn, .page').forEach(el => {
@@ -236,21 +233,18 @@
             });
         });
 
-        // Добавление подарка
         document.getElementById('addGiftBtn').addEventListener('click', () => {
             user.gifts.push(`Подарок ${user.gifts.length + 1}`);
             localStorage.setItem('userData', JSON.stringify(user));
             updateProfile();
         });
 
-        // Сохранение имени
         document.getElementById('saveNameBtn').addEventListener('click', () => {
             user.name = document.getElementById('userNameInput').value || 'Гость';
             localStorage.setItem('userData', JSON.stringify(user));
             updateProfile();
         });
 
-        // Колесо фортуны
         let isSpinning = false;
         document.getElementById('spinBtn').addEventListener('click', () => {
             if(!isSpinning) {
@@ -270,7 +264,6 @@
             }
         });
 
-        // Инициализация при загрузке
         loadProfile();
     </script>
 </body>
