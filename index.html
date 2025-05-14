@@ -1,105 +1,268 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Telegram App</title>
+    <title>Gift Fortune</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --text: #ecf0f1;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background: var(--primary);
+            color: var(--text);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
         }
 
-        .content {
-            flex: 1;
+        .header {
+            padding: 15px;
+            background: var(--secondary);
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
+            gap: 15px;
         }
 
-        .nav-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 10px;
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            position: sticky;
-            bottom: 0;
-        }
-
-        .nav-button {
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: var(--tg-theme-button-color, #50a8eb);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .nav-button.active {
-            background: var(--tg-theme-button-color, #50a8eb);
-            opacity: 0.9;
+        .profile-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .page {
             display: none;
-            font-size: 2em;
-            font-weight: bold;
+            padding: 20px;
+            min-height: calc(100vh - 150px);
         }
 
         .page.active {
             display: block;
         }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            background: conic-gradient(
+                #e74c3c, #2ecc71, #f1c40f, #9b59b6,
+                #e74c3c, #2ecc71, #f1c40f, #9b59b6
+            );
+        }
+
+        .spin-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 40px;
+            background: var(--accent);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--secondary);
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .nav-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+        }
+
+        .gift-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .gift-item {
+            padding: 10px;
+            background: var(--secondary);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
-    <div class="content">
-        <div id="page1" class="page active">Soon...</div>
-        <div id="page2" class="page">Page 2 Content</div>
-        <div id="page3" class="page">Page 3 Content</div>
-        <div id="page4" class="page">Page 4 Content</div>
+    <div class="header">
+        <img class="profile-photo" id="userPhoto" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg==">
+        <div>
+            <h2 id="userName">Гость</h2>
+            <p id="userStatus">Добро пожаловать!</p>
+        </div>
     </div>
 
-    <div class="nav-buttons">
-        <button class="nav-button active" data-page="1">Page 1</button>
-        <button class="nav-button" data-page="2">Page 2</button>
-        <button class="nav-button" data-page="3">Page 3</button>
-        <button class="nav-button" data-page="4">Page 4</button>
+    <div id="page1" class="page active">
+        <div class="wheel-container">
+            <div class="wheel" id="wheel"></div>
+        </div>
+        <button class="spin-btn" id="spinBtn">🎡 Крутить!</button>
     </div>
+
+    <div id="page2" class="page">
+        <h2>Мои подарки</h2>
+        <div class="gift-list" id="giftList"></div>
+        <button class="nav-btn" id="addGiftBtn" style="margin-top: 20px;">+ Добавить подарок</button>
+    </div>
+
+    <div id="page3" class="page">
+        <h2>Статистика</h2>
+        <div class="stats">
+            <p>Побед: <span id="wins">0</span></p>
+            <p>Поражений: <span id="losses">0</span></p>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <h2>Настройки</h2>
+        <div class="settings">
+            <input type="text" id="userNameInput" placeholder="Ваше имя">
+            <button class="nav-btn" id="saveNameBtn">Сохранить</button>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <button class="nav-btn active" data-page="1">🎰 Играть</button>
+        <button class="nav-btn" data-page="2">🎁 Подарки</button>
+        <button class="nav-btn" data-page="3">📊 Статистика</button>
+        <button class="nav-btn" data-page="4">⚙️ Настройки</button>
+    </nav>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        // Инициализация данных
+        let user = {
+            name: 'Гость',
+            photo: '',
+            gifts: [],
+            stats: { wins: 0, losses: 0 }
+        };
 
-        document.querySelectorAll('.nav-button').forEach(button => {
-            button.addEventListener('click', () => {
-                const pageNumber = button.dataset.page;
-                
-                document.querySelectorAll('.page, .nav-button').forEach(el => {
+        // Проверка Telegram Web App
+        const isTelegram = typeof Telegram !== 'undefined' && Telegram.WebApp;
+
+        // Загрузка данных профиля
+        function loadProfile() {
+            if(isTelegram) {
+                const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                if(tgUser) {
+                    user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
+                    user.photo = tgUser.photo_url || user.photo;
+                }
+            }
+            
+            // Загрузка из localStorage
+            const savedData = localStorage.getItem('userData');
+            if(savedData) {
+                const data = JSON.parse(savedData);
+                user = { ...user, ...data };
+            }
+
+            updateProfile();
+        }
+
+        // Обновление интерфейса
+        function updateProfile() {
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userPhoto').src = user.photo || document.getElementById('userPhoto').src;
+            document.getElementById('wins').textContent = user.stats.wins;
+            document.getElementById('losses').textContent = user.stats.losses;
+            document.getElementById('giftList').innerHTML = user.gifts
+                .map((gift, i) => `<div class="gift-item">Подарок ${i + 1}</div>`)
+                .join('');
+        }
+
+        // Навигация
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn, .page').forEach(el => {
                     el.classList.remove('active');
                 });
-                
-                document.getElementById(`page${pageNumber}`).classList.add('active');
-                button.classList.add('active');
+                const pageId = this.dataset.page;
+                document.getElementById(`page${pageId}`).classList.add('active');
+                this.classList.add('active');
             });
         });
 
-        tg.MainButton.setText("Готово");
-        tg.MainButton.show();
-
-        tg.MainButton.onClick(() => {
-            tg.close();
+        // Добавление подарка
+        document.getElementById('addGiftBtn').addEventListener('click', () => {
+            user.gifts.push(`Подарок ${user.gifts.length + 1}`);
+            localStorage.setItem('userData', JSON.stringify(user));
+            updateProfile();
         });
+
+        // Сохранение имени
+        document.getElementById('saveNameBtn').addEventListener('click', () => {
+            user.name = document.getElementById('userNameInput').value || 'Гость';
+            localStorage.setItem('userData', JSON.stringify(user));
+            updateProfile();
+        });
+
+        // Колесо фортуны
+        let isSpinning = false;
+        document.getElementById('spinBtn').addEventListener('click', () => {
+            if(!isSpinning) {
+                isSpinning = true;
+                const rotations = 5 + Math.random() * 2;
+                const wheel = document.getElementById('wheel');
+                
+                wheel.style.transform = `rotate(${rotations * 360}deg)`;
+                
+                setTimeout(() => {
+                    isSpinning = false;
+                    user.stats.wins++;
+                    localStorage.setItem('userData', JSON.stringify(user));
+                    updateProfile();
+                    alert('Поздравляем с выигрышем!');
+                }, 3000);
+            }
+        });
+
+        // Инициализация
+        loadProfile();
+
+        // Адаптация для не-Telegram среды
+        if(!isTelegram) {
+            document.getElementById('userStatus').textContent = 'Гостевой режим';
+            if(typeof Telegram !== 'undefined') {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+            }
+        }
     </script>
 </body>
 </html>
