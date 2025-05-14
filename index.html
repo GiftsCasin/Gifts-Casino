@@ -1,168 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-	<title></title>
-	<meta name="generator" content="LibreOffice 24.2.5.2 (Windows)"/>
-	<meta name="created" content="2025-05-14T13:53:37.669000000"/>
-	<meta name="changed" content="2025-05-14T13:54:16.343000000"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Telegram App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            position: sticky;
+            bottom: 0;
+        }
+
+        .nav-button {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--tg-theme-button-color, #50a8eb);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .nav-button.active {
+            background: var(--tg-theme-button-color, #50a8eb);
+            opacity: 0.9;
+        }
+
+        .page {
+            display: none;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .page.active {
+            display: block;
+        }
+    </style>
 </head>
-<body lang="ru-RU" dir="ltr"><p>&lt;!DOCTYPE html&gt;</p>
-<p>&lt;html&gt;</p>
-<p>&lt;head&gt;</p>
-<p>    &lt;meta charset=&quot;UTF-8&quot;&gt;</p>
-<p>    &lt;meta name=&quot;viewport&quot;
-content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</p>
-<p>    &lt;title&gt;My Telegram App&lt;/title&gt;</p>
-<p>    &lt;script
-src=&quot;https://telegram.org/js/telegram-web-app.js&quot;&gt;&lt;/script&gt;</p>
-<p>    &lt;style&gt;</p>
-<p>        body {</p>
-<p>            margin: 0;</p>
-<p>            padding: 0;</p>
-<p>            background: var(--tg-theme-bg-color, #ffffff);</p>
-<p>            color: var(--tg-theme-text-color, #000000);</p>
-<p>            font-family: Arial, sans-serif;</p>
-<p>            height: 100vh;</p>
-<p>            display: flex;</p>
-<p>            flex-direction: column;</p>
-<p>        }</p>
-<p><br/>
-<br/>
+<body>
+    <div class="content">
+        <div id="page1" class="page active">Soon...</div>
+        <div id="page2" class="page">Page 2 Content</div>
+        <div id="page3" class="page">Page 3 Content</div>
+        <div id="page4" class="page">Page 4 Content</div>
+    </div>
 
-</p>
-<p>        .content {</p>
-<p>            flex: 1;</p>
-<p>            display: flex;</p>
-<p>            align-items: center;</p>
-<p>            justify-content: center;</p>
-<p>            padding: 20px;</p>
-<p>            text-align: center;</p>
-<p>        }</p>
-<p><br/>
-<br/>
+    <div class="nav-buttons">
+        <button class="nav-button active" data-page="1">Page 1</button>
+        <button class="nav-button" data-page="2">Page 2</button>
+        <button class="nav-button" data-page="3">Page 3</button>
+        <button class="nav-button" data-page="4">Page 4</button>
+    </div>
 
-</p>
-<p>        .nav-buttons {</p>
-<p>            display: grid;</p>
-<p>            grid-template-columns: repeat(4, 1fr);</p>
-<p>            gap: 10px;</p>
-<p>            padding: 10px;</p>
-<p>            background: var(--tg-theme-secondary-bg-color,
-#f0f0f0);</p>
-<p>            position: sticky;</p>
-<p>            bottom: 0;</p>
-<p>        }</p>
-<p><br/>
-<br/>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-</p>
-<p>        .nav-button {</p>
-<p>            padding: 12px;</p>
-<p>            border: none;</p>
-<p>            border-radius: 10px;</p>
-<p>            background: var(--tg-theme-button-color, #50a8eb);</p>
-<p>            color: var(--tg-theme-button-text-color, #ffffff);</p>
-<p>            cursor: pointer;</p>
-<p>            transition: opacity 0.2s;</p>
-<p>        }</p>
-<p><br/>
-<br/>
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const pageNumber = button.dataset.page;
+                
+                document.querySelectorAll('.page, .nav-button').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                document.getElementById(`page${pageNumber}`).classList.add('active');
+                button.classList.add('active');
+            });
+        });
 
-</p>
-<p>        .nav-button.active {</p>
-<p>            background: var(--tg-theme-button-color, #50a8eb);</p>
-<p>            opacity: 0.9;</p>
-<p>        }</p>
-<p><br/>
-<br/>
+        tg.MainButton.setText("Готово");
+        tg.MainButton.show();
 
-</p>
-<p>        .page {</p>
-<p>            display: none;</p>
-<p>            font-size: 2em;</p>
-<p>            font-weight: bold;</p>
-<p>        }</p>
-<p><br/>
-<br/>
-
-</p>
-<p>        .page.active {</p>
-<p>            display: block;</p>
-<p>        }</p>
-<p>    &lt;/style&gt;</p>
-<p>&lt;/head&gt;</p>
-<p>&lt;body&gt;</p>
-<p>    &lt;div class=&quot;content&quot;&gt;</p>
-<p>        &lt;div id=&quot;page1&quot; class=&quot;page
-active&quot;&gt;Soon...&lt;/div&gt;</p>
-<p>        &lt;div id=&quot;page2&quot; class=&quot;page&quot;&gt;Page
-2 Content&lt;/div&gt;</p>
-<p>        &lt;div id=&quot;page3&quot; class=&quot;page&quot;&gt;Page
-3 Content&lt;/div&gt;</p>
-<p>        &lt;div id=&quot;page4&quot; class=&quot;page&quot;&gt;Page
-4 Content&lt;/div&gt;</p>
-<p>    &lt;/div&gt;</p>
-<p><br/>
-<br/>
-
-</p>
-<p>    &lt;div class=&quot;nav-buttons&quot;&gt;</p>
-<p>        &lt;button class=&quot;nav-button active&quot;
-data-page=&quot;1&quot;&gt;Page 1&lt;/button&gt;</p>
-<p>        &lt;button class=&quot;nav-button&quot; data-page=&quot;2&quot;&gt;Page
-2&lt;/button&gt;</p>
-<p>        &lt;button class=&quot;nav-button&quot; data-page=&quot;3&quot;&gt;Page
-3&lt;/button&gt;</p>
-<p>        &lt;button class=&quot;nav-button&quot; data-page=&quot;4&quot;&gt;Page
-4&lt;/button&gt;</p>
-<p>    &lt;/div&gt;</p>
-<p><br/>
-<br/>
-
-</p>
-<p>    &lt;script&gt;</p>
-<p>        // Инициализация Telegram Web App</p>
-<p>        const tg = window.Telegram.WebApp;</p>
-<p>        tg.expand(); // Растянуть на весь экран</p>
-<p>        
-</p>
-<p>        // Обработчик переключения страниц</p>
-<p>        document.querySelectorAll('.nav-button').forEach(button =&gt;
-{</p>
-<p>            button.addEventListener('click', () =&gt; {</p>
-<p>                const pageNumber = button.dataset.page;</p>
-<p>                
-</p>
-<p>                // Убрать активные классы</p>
-<p>                document.querySelectorAll('.page,
-.nav-button').forEach(el =&gt; {</p>
-<p>                    el.classList.remove('active');</p>
-<p>                });</p>
-<p>                
-</p>
-<p>                // Показать выбранную страницу</p>
-<p>               
-document.getElementById(`page${pageNumber}`).classList.add('active');</p>
-<p>                button.classList.add('active');</p>
-<p>            });</p>
-<p>        });</p>
-<p><br/>
-<br/>
-
-</p>
-<p>        // Инициализация основной кнопки
-Telegram</p>
-<p>        tg.MainButton.setText(&quot;Готово&quot;);</p>
-<p>        tg.MainButton.show();</p>
-<p>        
-</p>
-<p>        // Обработчик основной кнопки</p>
-<p>        tg.MainButton.onClick(() =&gt; {</p>
-<p>            tg.close();</p>
-<p>        });</p>
-<p>    &lt;/script&gt;</p>
-<p>&lt;/body&gt;</p>
-<p>&lt;/html&gt;</p>
+        tg.MainButton.onClick(() => {
+            tg.close();
+        });
+    </script>
 </body>
 </html>
