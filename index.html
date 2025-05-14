@@ -35,6 +35,7 @@
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
+            background: var(--accent);
         }
 
         .page {
@@ -120,7 +121,9 @@
 </head>
 <body>
     <div class="header">
-        <img class="profile-photo" id="userPhoto" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg==">
+        <img class="profile-photo" id="userPhoto" 
+             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg=='"
+             src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg==">
         <div>
             <h2 id="userName">Гость</h2>
             <p id="userStatus">Добро пожаловать!</p>
@@ -178,11 +181,21 @@
         // Загрузка данных профиля
         function loadProfile() {
             if(isTelegram) {
+                Telegram.WebApp.ready();
                 const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                
                 if(tgUser) {
-                    user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
-                    user.photo = tgUser.photo_url || user.photo;
+                    // Обновление данных из Telegram
+                    user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
+                    user.photo = tgUser.photo_url || '';
+                    
+                    // Непосредственное обновление аватара
+                    const userPhoto = document.getElementById('userPhoto');
+                    if(tgUser.photo_url) {
+                        userPhoto.src = tgUser.photo_url + '?t=' + Date.now();
+                    }
                 }
+                Telegram.WebApp.expand();
             }
             
             // Загрузка из localStorage
@@ -198,12 +211,17 @@
         // Обновление интерфейса
         function updateProfile() {
             document.getElementById('userName').textContent = user.name;
-            document.getElementById('userPhoto').src = user.photo || document.getElementById('userPhoto').src;
             document.getElementById('wins').textContent = user.stats.wins;
             document.getElementById('losses').textContent = user.stats.losses;
             document.getElementById('giftList').innerHTML = user.gifts
                 .map((gift, i) => `<div class="gift-item">Подарок ${i + 1}</div>`)
                 .join('');
+
+            // Обновление статуса
+            const statusElement = document.getElementById('userStatus');
+            statusElement.textContent = isTelegram ? 
+                `@${Telegram.WebApp.initDataUnsafe.user?.username || 'пользователь'}` : 
+                'Гостевой режим';
         }
 
         // Навигация
@@ -252,17 +270,8 @@
             }
         });
 
-        // Инициализация
+        // Инициализация при загрузке
         loadProfile();
-
-        // Адаптация для не-Telegram среды
-        if(!isTelegram) {
-            document.getElementById('userStatus').textContent = 'Гостевой режим';
-            if(typeof Telegram !== 'undefined') {
-                Telegram.WebApp.ready();
-                Telegram.WebApp.expand();
-            }
-        }
     </script>
 </body>
 </html>
