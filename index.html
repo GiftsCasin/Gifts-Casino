@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gift Fortune</title>
+    <title>Gift Roulette</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -48,39 +48,6 @@
             display: block;
         }
 
-        .wheel-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 20px auto;
-        }
-
-        .wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 4px solid var(--accent);
-            position: relative;
-            overflow: hidden;
-            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
-            background: conic-gradient(
-                #e74c3c, #2ecc71, #f1c40f, #9b59b6,
-                #e74c3c, #2ecc71, #f1c40f, #9b59b6
-            );
-        }
-
-        .spin-btn {
-            display: block;
-            margin: 30px auto;
-            padding: 15px 40px;
-            background: var(--accent);
-            border: none;
-            border-radius: 25px;
-            color: white;
-            font-size: 1.2em;
-            cursor: pointer;
-        }
-
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -105,6 +72,119 @@
             background: var(--accent);
         }
 
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+            transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+            transform-origin: 50% 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .spin-btn {
+            padding: 15px 40px;
+            background: var(--accent);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--secondary);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .gift-item {
+            padding: 15px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .gift-item.selected {
+            border-color: var(--accent);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .modal-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .selected-gifts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .selected-gift {
+            background: var(--secondary);
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .gift-list {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -112,21 +192,29 @@
             margin-top: 20px;
         }
 
-        .gift-item {
-            padding: 10px;
-            background: var(--secondary);
-            border-radius: 8px;
+        .countdown {
+            font-size: 2em;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--accent);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <img class="profile-photo" id="userPhoto" 
-             onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg=='"
-             src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg==">
+             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2VjZjBmMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5HPC90ZXh0Pjwvc3ZnPg=='">
         <div>
             <h2 id="userName">Гость</h2>
-            <p id="userStatus">Добро пожаловать!</p>
+            <p id="userStatus">Статус: не подключен</p>
         </div>
     </div>
 
@@ -134,13 +222,18 @@
         <div class="wheel-container">
             <div class="wheel" id="wheel"></div>
         </div>
-        <button class="spin-btn" id="spinBtn">🎡 Крутить!</button>
+        <div class="controls">
+            <button class="spin-btn" id="addGiftBtn">Добавить</button>
+            <div class="selected-gifts" id="selectedGifts"></div>
+            <button class="spin-btn" id="spinBtn">🎡 Начать игру</button>
+            <div class="countdown" id="countdown"></div>
+        </div>
     </div>
 
     <div id="page2" class="page">
         <h2>Мои подарки</h2>
         <div class="gift-list" id="giftList"></div>
-        <button class="nav-btn" id="addGiftBtn" style="margin-top: 20px;">+ Добавить подарок</button>
+        <button class="nav-btn" id="createGiftBtn" style="margin-top: 20px;">+ Новый подарок</button>
     </div>
 
     <div id="page3" class="page">
@@ -159,6 +252,17 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="giftModal">
+        <div class="modal-content">
+            <h3>Выберите подарки для ставки</h3>
+            <div class="gifts-grid" id="giftsGrid"></div>
+            <div class="modal-controls">
+                <button class="nav-btn" onclick="closeModal()">Отмена</button>
+                <button class="nav-btn" onclick="saveSelection()">Готово</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="nav-bar">
         <button class="nav-btn active" data-page="1">🎰 Играть</button>
         <button class="nav-btn" data-page="2">🎁 Подарки</button>
@@ -167,104 +271,251 @@
     </nav>
 
     <script>
+        const tg = window.Telegram?.WebApp;
         let user = {
+            id: Date.now().toString(),
             name: 'Гость',
-            photo: '',
             gifts: [],
-            stats: { wins: 0, losses: 0 }
+            stats: { wins: 0, losses: 0 },
+            selectedGifts: new Set()
         };
 
-        const isTelegram = typeof Telegram !== 'undefined' && Telegram.WebApp;
+        let gameState = {
+            players: new Map(),
+            isRunning: false,
+            countdown: 5
+        };
 
-        function loadProfile() {
-            if(isTelegram) {
-                try {
-                    Telegram.WebApp.ready();
-                    const tgUser = Telegram.WebApp.initDataUnsafe.user;
-                    
-                    if(tgUser) {
-                        user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
-                        
-                        if(tgUser.photo_url) {
-                            const userPhoto = document.getElementById('userPhoto');
-                            userPhoto.src = `${tgUser.photo_url}?t=${Date.now()}`;
-                        }
-                    }
-                    Telegram.WebApp.expand();
-                } catch(e) {
-                    console.error('Ошибка инициализации Telegram:', e);
+        let selectedTemp = new Set();
+
+        // Инициализация профиля
+        function initProfile() {
+            if (tg?.initDataUnsafe?.user) {
+                const tgUser = tg.initDataUnsafe.user;
+                user.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Гость';
+                user.id = tgUser.id.toString();
+                if (tgUser.photo_url) {
+                    document.getElementById('userPhoto').src = `${tgUser.photo_url}?t=${Date.now()}`;
                 }
+                document.getElementById('userStatus').textContent = `@${tgUser.username || 'пользователь'}`;
             }
-
-            const savedData = localStorage.getItem('userData');
-            if(savedData) {
-                try {
-                    const data = JSON.parse(savedData);
-                    user = { ...user, ...data };
-                } catch(e) {
-                    console.error('Ошибка загрузки данных:', e);
-                }
-            }
-
-            updateProfile();
+            loadUserData();
+            updateUI();
         }
 
-        function updateProfile() {
+        function loadUserData() {
+            const savedData = localStorage.getItem('userData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                user.gifts = data.gifts || [];
+                user.stats = data.stats || { wins: 0, losses: 0 };
+                user.selectedGifts = new Set(data.selectedGifts || []);
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('userData', JSON.stringify({
+                gifts: user.gifts,
+                stats: user.stats,
+                selectedGifts: Array.from(user.selectedGifts)
+            }));
+        }
+
+        function updateUI() {
             document.getElementById('userName').textContent = user.name;
+            updateGiftList();
+            updateSelectedDisplay();
+            updateGamePlayers();
             document.getElementById('wins').textContent = user.stats.wins;
             document.getElementById('losses').textContent = user.stats.losses;
-            document.getElementById('giftList').innerHTML = user.gifts
-                .map((gift, i) => `<div class="gift-item">Подарок ${i + 1}</div>`)
-                .join('');
-
-            document.getElementById('userStatus').textContent = isTelegram ? 
-                (Telegram.WebApp.initDataUnsafe.user?.username ? `@${Telegram.WebApp.initDataUnsafe.user.username}` : 'Пользователь Telegram') : 
-                'Гостевой режим';
         }
 
+        function updateGiftList() {
+            const giftList = document.getElementById('giftList');
+            giftList.innerHTML = user.gifts.map(gift => `
+                <div class="gift-item">
+                    ${gift.name}
+                    <button class="delete-btn" data-gift-id="${gift.id}">×</button>
+                </div>
+            `).join('');
+        }
+
+        function updateSelectedDisplay() {
+            const container = document.getElementById('selectedGifts');
+            container.innerHTML = Array.from(user.selectedGifts)
+                .map(id => {
+                    const gift = user.gifts.find(g => g.id === id);
+                    return gift ? `<div class="selected-gift">${gift.name}</div>` : '';
+                }).join('');
+        }
+
+        function updateGamePlayers() {
+            gameState.players.set(user.id, {
+                ...user,
+                selectedGifts: new Set(user.selectedGifts)
+            });
+        }
+
+        function handleDeleteClick(event) {
+            const giftId = event.target.dataset.giftId;
+            if (giftId) {
+                removeGift(giftId);
+            }
+        }
+
+        function removeGift(giftId) {
+            user.gifts = user.gifts.filter(g => g.id !== giftId);
+            user.selectedGifts.delete(giftId);
+            selectedTemp.delete(giftId);
+            gameState.players.forEach(player => {
+                player.selectedGifts.delete(giftId);
+            });
+            saveUserData();
+            updateUI();
+        }
+
+        function openModal() {
+            const modal = document.getElementById('giftModal');
+            selectedTemp = new Set(user.selectedGifts);
+            renderGiftsModal();
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('giftModal').style.display = 'none';
+        }
+
+        function saveSelection() {
+            user.selectedGifts = new Set(selectedTemp);
+            updateUI();
+            saveUserData();
+            closeModal();
+        }
+
+        function renderGiftsModal() {
+            const container = document.getElementById('giftsGrid');
+            container.innerHTML = user.gifts.map(gift => `
+                <div class="gift-item ${selectedTemp.has(gift.id) ? 'selected' : ''}" 
+                     onclick="toggleGiftSelection('${gift.id}')">
+                    ${gift.name}
+                </div>
+            `).join('');
+        }
+
+        function toggleGiftSelection(giftId) {
+            selectedTemp.has(giftId) ? selectedTemp.delete(giftId) : selectedTemp.add(giftId);
+            renderGiftsModal();
+        }
+
+        async function startGame() {
+            if (gameState.players.size < 2) {
+                alert('Нужно минимум 2 игрока!');
+                return;
+            }
+
+            gameState.isRunning = true;
+            startCountdown();
+        }
+
+        async function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            for (let i = 5; i > 0; i--) {
+                countdownElement.textContent = i;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            countdownElement.textContent = 'Крутим!';
+            spinWheel();
+        }
+
+        function spinWheel() {
+            const totalGifts = Array.from(gameState.players.values())
+                .reduce((sum, player) => sum + player.selectedGifts.size, 0);
+
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = '';
+
+            let currentAngle = 0;
+            Array.from(gameState.players.values()).forEach(player => {
+                const percentage = (player.selectedGifts.size / totalGifts) * 100;
+                const angle = (percentage * 360) / 100;
+
+                const segment = document.createElement('div');
+                segment.className = 'segment';
+                segment.style.transform = `rotate(${currentAngle}deg)`;
+                segment.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 40%)`;
+                segment.innerHTML = `
+                    <div style="transform: rotate(${angle/2}deg)">
+                        ${player.name}<br>${percentage.toFixed(1)}%
+                    </div>
+                `;
+
+                wheel.appendChild(segment);
+                currentAngle += angle;
+            });
+
+            const randomRotation = 1440 + Math.random() * 360;
+            wheel.style.transform = `rotate(${randomRotation}deg)`;
+
+            setTimeout(() => {
+                determineWinner(randomRotation % 360, totalGifts);
+                gameState.players.clear();
+                updateUI();
+            }, 5000);
+        }
+
+        function determineWinner(angle, totalGifts) {
+            let current = 0;
+            for (const player of gameState.players.values()) {
+                const segmentSize = (player.selectedGifts.size / totalGifts) * 360;
+                if (angle >= current && angle < current + segmentSize) {
+                    alert(`Победитель: ${player.name}!`);
+                    player.gifts.push(...Array.from(gameState.players.values())
+                        .flatMap(p => Array.from(p.selectedGifts)));
+                    user.stats.wins++;
+                    saveUserData();
+                    updateUI();
+                    break;
+                }
+                current += segmentSize;
+            }
+        }
+
+        // Обработчики событий
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn, .page').forEach(el => {
                     el.classList.remove('active');
                 });
-                const pageId = this.dataset.page;
-                document.getElementById(`page${pageId}`).classList.add('active');
+                document.getElementById(`page${this.dataset.page}`).classList.add('active');
                 this.classList.add('active');
             });
         });
 
-        document.getElementById('addGiftBtn').addEventListener('click', () => {
-            user.gifts.push(`Подарок ${user.gifts.length + 1}`);
-            localStorage.setItem('userData', JSON.stringify(user));
-            updateProfile();
+        document.getElementById('createGiftBtn').addEventListener('click', () => {
+            const name = prompt('Введите название подарка (на английском):');
+            if (name) {
+                user.gifts.push({
+                    id: Date.now().toString(),
+                    name,
+                    value: Math.floor(Math.random() * 100) + 1
+                });
+                saveUserData();
+                updateUI();
+            }
         });
 
         document.getElementById('saveNameBtn').addEventListener('click', () => {
             user.name = document.getElementById('userNameInput').value || 'Гость';
-            localStorage.setItem('userData', JSON.stringify(user));
-            updateProfile();
+            saveUserData();
+            updateUI();
         });
 
-        let isSpinning = false;
-        document.getElementById('spinBtn').addEventListener('click', () => {
-            if(!isSpinning) {
-                isSpinning = true;
-                const rotations = 5 + Math.random() * 2;
-                const wheel = document.getElementById('wheel');
-                
-                wheel.style.transform = `rotate(${rotations * 360}deg)`;
-                
-                setTimeout(() => {
-                    isSpinning = false;
-                    user.stats.wins++;
-                    localStorage.setItem('userData', JSON.stringify(user));
-                    updateProfile();
-                    alert('Поздравляем с выигрышем!');
-                }, 3000);
-            }
-        });
+        document.getElementById('addGiftBtn').addEventListener('click', openModal);
+        document.getElementById('spinBtn').addEventListener('click', startGame);
+        document.getElementById('giftList').addEventListener('click', handleDeleteClick);
 
-        loadProfile();
+        // Инициализация
+        initProfile();
     </script>
 </body>
 </html>
